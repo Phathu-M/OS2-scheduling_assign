@@ -51,6 +51,7 @@ public class Barman extends Thread {
     // Output file writer to csv file for recording order completion times
     private static BufferedWriter outputWriter;
     private static final Object outputLock = new Object();
+    private int runId = 0; // To differentiate between different runs in the output file
 
 
  
@@ -351,16 +352,19 @@ public class Barman extends Thread {
             if (!dir.exists()) {
                 dir.mkdirs();
             }
+             java.io.File file = new java.io.File(filename);
             if (outputWriter == null) {
+                boolean isNewFile = !file.exists() || file.length() == 0;
                 outputWriter = new BufferedWriter(new java.io.FileWriter(filename, true));
                 // Write header if file is new
-                java.io.File file = new java.io.File(filename);
-                if (file.length() == 0) {
-                    outputWriter.write("PatronID,ArrivalTime,ServiceStartTime,CompletionTime,WaitingTime,ResponseTime,TurnaroundTime\n");
+              
+                if (isNewFile) {
+                    outputWriter.write("RunID,PatronID,ArrivalTime,ServiceStartTime,CompletionTime,WaitingTime,ResponseTime,TurnaroundTime\n");
                 }
                 }
-                outputWriter.write(order.getOrderer() + "," + order.getArrivalTime() + "," + order.getServiceStartTime() + "," + order.getCompletionTime() + "," + order.getWaitingTime() + "," + order.getResponseTime() + "," + order.getTurnaroundTime() + "\n");
+                outputWriter.write(runId + "," + order.getOrderer() + "," + order.getArrivalTime() + "," + order.getServiceStartTime() + "," + order.getCompletionTime() + "," + order.getWaitingTime() + "," + order.getResponseTime() + "," + order.getTurnaroundTime() + "\n");
                 outputWriter.flush();
+                runId++;
             }
         } catch (IOException e) {
             throw new IOException("Failed to write to output file: " + filename, e);
