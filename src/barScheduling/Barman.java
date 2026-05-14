@@ -19,6 +19,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.io.BufferedWriter;
 
 public class Barman extends Thread {
 
@@ -46,6 +47,11 @@ public class Barman extends Thread {
     private static final long AGING_THRESHOLD = 4000; // ms
 
     private final String schedulerName;
+ 
+    // Output file writer to csv file for recording order completion times
+    private static BufferedWriter outputWriter;
+    private static final Object outputLock = new Object();
+
 
  
 
@@ -337,6 +343,29 @@ public class Barman extends Thread {
     
     private void recordCompletedOrder(DrinkOrder order) throws IOException {
     	// THIS IS THE ONLY FUNCTION YOU MAY CHANGE
+
+        // Record the completion time of the order to a CSV File  of specific scheduler
+        String filename = "results/output_" + schedulerName + ".csv";
+        try{
+            synchronized (outputLock) {java.io.File dir = new java.io.File("results");
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            if (outputWriter == null) {
+                outputWriter = new BufferedWriter(new java.io.FileWriter(filename, true));
+                // Write header if file is new
+                java.io.File file = new java.io.File(filename);
+                if (file.length() == 0) {
+                    outputWriter.write("PatronID,ArrivalTime,ServiceStartTime,CompletionTime,WaitingTime,ResponseTime,TurnaroundTime\n");
+                }
+                }
+                outputWriter.write(order.getOrderer() + "," + order.getArrivalTime() + "," + order.getServiceStartTime() + "," + order.getCompletionTime() + "," + order.getWaitingTime() + "," + order.getResponseTime() + "," + order.getTurnaroundTime() + "\n");
+                outputWriter.flush();
+            }
+        } catch (IOException e) {
+            throw new IOException("Failed to write to output file: " + filename, e);
+        }
+
     }
 
 }
