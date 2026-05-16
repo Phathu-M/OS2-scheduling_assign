@@ -150,10 +150,10 @@ def plot_metric(averages, metric, title):
     plt.figure(figsize=(12, 6))
 
     colors = {
-        "FCFS": "#378ADD",
+        "FCFS": "#E91212",
         "SJF": "#639922",
         "Priority": "#EF9F27",
-        "MLFQ": "#7F77DD"
+        "MLFQ": "#5B2D8E"
     }
 
     for alg in averages:
@@ -166,7 +166,8 @@ def plot_metric(averages, metric, title):
     plt.title(title)
     plt.legend()
     plt.grid(True, alpha=0.3)
-    plt.yscale("linear")   # fixed — no more log scale conflict
+    plt.yscale("linear")
+    plt.xlim(left=0)   
     plt.tight_layout()
     plt.savefig(f"results/{metric}_vs_patrons.png", dpi=300)
     plt.close()
@@ -182,7 +183,7 @@ def plot_boxplots(data, metric, title):
         grouped[alg].append(row[metric])
     
     alg_order = ["FCFS", "SJF", "Priority", "MLFQ"]
-    colors = ["#378ADD", "#639922", "#EF9F27", "#7F77DD"]
+    colors = ["#E91212", "#639922", "#EF9F27", "#5B2D8E"]
     
     fig, ax = plt.subplots(figsize=(10, 6))
     bp = ax.boxplot(
@@ -216,10 +217,10 @@ def plot_throughput(throughput_df):
     plt.figure(figsize=(12, 6))
     
     colors = {
-        "FCFS": "#378ADD",
+        "FCFS": "#E91212",
         "SJF": "#639922",
         "PRIORITY": "#EF9F27",
-        "MLFQ": "#7F77DD"
+        "MLFQ": "#5B2D8E"
     }
     
     for alg in throughput_df["Algorithm"].unique():
@@ -234,6 +235,7 @@ def plot_throughput(throughput_df):
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
+    plt.xlim(left=0)
     plt.savefig("results/throughput.png", dpi=300)
     plt.close()
 
