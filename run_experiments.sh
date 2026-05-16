@@ -32,14 +32,18 @@ for SCHED in "${SCHEDULERS[@]}"; do
             COUNT=$((COUNT + 1))
             echo "[$COUNT/$TOTAL] Scheduler=$SCHED Patrons=$PATRONS Seed=$SEED"
 
-            echo "---- RUN START ----" >> results/log.txt
-            echo "SCHED=$SCHED PATRONS=$PATRONS SEED=$SEED" >> results/log.txt
-
             java -cp bin barScheduling.SchedulingSimulation \
                 $PATRONS $SCHED $SEED $SWITCH_TIME
 
-            echo "---- RUN END ----" >> results/log.txt
-            echo "" >> results/log.txt
+            # Write separator line after each run
+            ALG_NAME=""
+            case $SCHED in
+                0) ALG_NAME="FCFS" ;;
+                1) ALG_NAME="SJF" ;;
+                2) ALG_NAME="PRIORITY" ;;
+                3) ALG_NAME="MLFQ" ;;
+            esac
+            echo "SEPARATOR,$PATRONS,$SEED,,,,,," >> results/output_${ALG_NAME}.csv
 
         done
     done

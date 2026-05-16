@@ -10,43 +10,68 @@ results = []
 files = glob.glob(os.path.join(INPUT_DIR, "output_*.csv"))
 
 for file in files:
-    df = pd.read_csv(file)
-    df = df.dropna()
-    df = df.sort_values("ArrivalTime")
-
     algo = os.path.basename(file).replace("output_", "").replace(".csv", "")
-
-    # Group rows into runs based on time gaps > 2000ms
-    df["run_id"] = (df["ArrivalTime"].diff() > 10000).cumsum()
-
-    for run_id, run_data in df.groupby("run_id"):
-        if len(run_data) == 0:
+    
+    current_patrons = None
+    current_seed = None
+    current_rows = []
+    
+    with open(file, "r") as f:
+        lines = f.readlines()
+    
+    for line in lines:
+        line = line.strip()
+        
+        # Skip header
+        if line.startswith("RunID") or line == "":
             continue
-
-        patron_count = run_data["PatronID"].nunique()
-        start_time = run_data["ArrivalTime"].min()
-        end_time = run_data["CompletionTime"].max()
-        num_orders = len(run_data)
+        
+        # Detect separator
+        if line.startswith("SEPARATOR"):
+            # Process previous run if exists
+            if current_rows and current_patrons is not None:
+                df = pd.DataFrame(current_rows)
+                patron_count = df["PatronID"].nunique()
+                start_time = df["ArrivalTime"].min()
+                end_time = df["CompletionTime"].max()
+                num_orders = len(df)
+                runtime = end_time - start_time
+                throughput = num_orders / runtime if runtime > 0 else 0
+                results.append([algo, current_patrons, current_seed, patron_count, num_orders, runtime, throughput])
+            
+            # Start new run
+            parts = line.split(",")
+            current_patrons = int(parts[1])
+            current_seed = int(parts[2])
+            current_rows = []
+        
+        else:
+            # Parse data row
+            parts = line.split(",")
+            if len(parts) >= 8:
+                try:
+                    current_rows.append({
+                        "PatronID": int(parts[1]),
+                        "ArrivalTime": int(parts[2]),
+                        "CompletionTime": int(parts[4]),
+                    })
+                except:
+                    continue
+    
+    # Process last run
+    if current_rows and current_patrons is not None:
+        df = pd.DataFrame(current_rows)
+        patron_count = df["PatronID"].nunique()
+        start_time = df["ArrivalTime"].min()
+        end_time = df["CompletionTime"].max()
+        num_orders = len(df)
         runtime = end_time - start_time
-
         throughput = num_orders / runtime if runtime > 0 else 0
-
-        results.append([
-            algo,
-            run_id,
-            patron_count,
-            num_orders,
-            runtime,
-            throughput
-        ])
+        results.append([algo, current_patrons, current_seed, patron_count, num_orders, runtime, throughput])
 
 summary = pd.DataFrame(results, columns=[
-    "Algorithm",
-    "RunID",
-    "PatronCount",
-    "OrdersCompleted",
-    "Runtime(ms)",
-    "Throughput"
+    "Algorithm", "PatronCount", "Seed", "UniquePatrons",
+    "OrdersCompleted", "Runtime(ms)", "Throughput"
 ])
 
 summary.to_csv(OUTPUT_FILE, index=False)

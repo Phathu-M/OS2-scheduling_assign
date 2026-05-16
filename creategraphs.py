@@ -1,7 +1,6 @@
 import csv
 import glob
 from collections import defaultdict
-from turtle import pd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -25,39 +24,55 @@ def load_data():
             reader = csv.DictReader(f)
 
             for row in reader:
+                # Skip separator lines
+                if row["RunID"].startswith("SEPARATOR"):
+                    continue
+                
                 data.append({
-                "file": file,
-                "arrival": int(row["ArrivalTime"]),   
-                "patron": int(row["PatronID"]),
-                "waiting": int(row["WaitingTime"]),
-                "turnaround": int(row["TurnaroundTime"]),
-                "response": int(row["ResponseTime"]),
-            })
+                    "file": file,
+                    "arrival": int(row["ArrivalTime"]),   
+                    "patron": int(row["PatronID"]),
+                    "waiting": int(row["WaitingTime"]),
+                    "turnaround": int(row["TurnaroundTime"]),
+                    "response": int(row["ResponseTime"]),
+                })
 
     return data
 
 def assign_run_ids(data):
     """
-    Groups rows into runs based on gaps in ArrivalTime.
-    A new run starts when there's a gap of more than 2 seconds (2000ms)
-    between consecutive arrival times.
+    Reads SEPARATOR lines from CSV files to assign correct
+    patron count and run ID to each row.
     """
-    if not data:
-        return data
-    
-    data.sort(key=lambda x: (x["file"], x["arrival"]))
-    
-    run_id = 0
-    prev_arrival = None
-    prev_file = None
-    
+    files = glob.glob("results/output_*.csv")
+    patron_map = {}  # maps (file, arrival_time) to patron_count
+
+    for file in files:
+        current_patrons = None
+        current_arrivals = []
+        
+        with open(file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("SEPARATOR"):
+                    parts = line.split(",")
+                    current_patrons = int(parts[1])
+                elif line.startswith("RunID") or line == "":
+                    continue
+                else:
+                    parts = line.split(",")
+                    if len(parts) >= 8 and current_patrons is not None:
+                        try:
+                            arrival = int(parts[2])
+                            patron_map[(file, arrival)] = current_patrons
+                        except:
+                            continue
+
     for row in data:
-        if prev_file != row["file"] or (row["arrival"] - prev_arrival) > 2000:
-            run_id += 1
-        row["run_id"] = run_id
-        prev_arrival = row["arrival"]
-        prev_file = row["file"]
-    
+        key = (row["file"], row["arrival"])
+        row["patron_count"] = patron_map.get(key, -1)
+        row["run_id"] = row["patron_count"]
+
     return data
 
 # =========================================================
@@ -82,37 +97,32 @@ def get_algorithm(filename):
 # SECTION 3: AGGREGATE METRICS (AVERAGE OVER RUNS/SEEDS)
 # =========================================================
 def aggregate(data):
-    """
-    Groups data by (algorithm, run_id) and computes:
-    - number of unique patrons in that run (used as x-axis)
-    - average metrics across all orders in that run
-    """
-    # First assign run IDs
     data = assign_run_ids(data)
 
-    # Group by (algorithm, run_id)
+    # Group by (algorithm, file, patron_count)
     grouped = defaultdict(lambda: {
         "waiting": [],
         "turnaround": [],
         "response": [],
-        "patrons": set()
+        "patrons": set(),
+        "patron_count": 0
     })
 
     for row in data:
         alg = get_algorithm(row["file"])
-        key = (alg, row["run_id"])
+        key = (alg, row["file"], row["patron_count"])
         grouped[key]["waiting"].append(row["waiting"])
         grouped[key]["turnaround"].append(row["turnaround"])
         grouped[key]["response"].append(row["response"])
         grouped[key]["patrons"].add(row["patron"])
+        grouped[key]["patron_count"] = row["patron_count"]
 
-    # Now average per (algorithm, patron_count)
+    # Average per (algorithm, patron_count)
     averages = defaultdict(lambda: defaultdict(lambda: {
         "waiting": [], "turnaround": [], "response": []
     }))
 
-    for (alg, run_id), values in grouped.items():
-        patron_count = len(values["patrons"])
+    for (alg, file, patron_count), values in grouped.items():
         averages[alg][patron_count]["waiting"].append(
             sum(values["waiting"]) / len(values["waiting"]))
         averages[alg][patron_count]["turnaround"].append(
@@ -132,7 +142,6 @@ def aggregate(data):
             }
 
     return final
-
 
 # =========================================================
 # SECTION 4: PLOTTING FUNCTION (LINE GRAPHS)
