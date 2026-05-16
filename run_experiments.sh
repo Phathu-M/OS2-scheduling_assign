@@ -8,6 +8,9 @@ SWITCH_TIME=5
 
 mkdir -p results
 
+rm -f results/output_*.csv
+echo "Cleared old results."
+
 echo "Compiling..."
 javac -d bin src/barScheduling/*.java
 
@@ -44,4 +47,4 @@ done
 
 echo ""
 echo "All experiments completed."
-echo "Check results/ folder and log.txt for run separation."
+echo "Check results/ folder for output."

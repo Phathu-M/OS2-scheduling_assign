@@ -348,7 +348,8 @@ public class Barman extends Thread {
         // Record the completion time of the order to a CSV File  of specific scheduler
         String filename = "results/output_" + schedulerName + ".csv";
         try{
-            synchronized (outputLock) {java.io.File dir = new java.io.File("results");
+            synchronized (outputLock) {
+                java.io.File dir = new java.io.File("results");
             if (!dir.exists()) {
                 dir.mkdirs();
             }
@@ -364,7 +365,7 @@ public class Barman extends Thread {
                 }
                 outputWriter.write(runId + "," + order.getOrderer() + "," + order.getArrivalTime() + "," + order.getServiceStartTime() + "," + order.getCompletionTime() + "," + order.getWaitingTime() + "," + order.getResponseTime() + "," + order.getTurnaroundTime() + "\n");
                 outputWriter.flush();
-                runId++;
+                
             }
         } catch (IOException e) {
             throw new IOException("Failed to write to output file: " + filename, e);
