@@ -1,15 +1,23 @@
 # Automates execution of FCFS, SJF, Priority, and MLFQ scheduling algorithms
 # across multiple patron counts and seed values.
 # Outputs CSV results per run into the results/ directory for analysis.
+
 SCHEDULERS=(0 1 2 3)
+# Different workload sizes (number of patrons)
 PATRON_COUNTS=(10 20 30 50 70 100)
+# Random seeds for repeatability
 SEEDS=(7 30 42 256 512 999)
+# Time taken to switch between tasks (context switch time)
 SWITCH_TIME=5
 
 mkdir -p results
 
 rm -f results/output_*.csv
 echo "Cleared old results."
+
+# =========================================================
+# SECTION 1: COMPILE JAVA PROGRAM
+# =========================================================
 
 echo "Compiling..."
 javac -d bin src/barScheduling/*.java
@@ -22,8 +30,16 @@ fi
 echo "Compilation successful."
 echo ""
 
+# =========================================================
+# SECTION 4: SETUP PROGRESS TRACKING
+# =========================================================
+
 TOTAL=$(( ${#SCHEDULERS[@]} * ${#PATRON_COUNTS[@]} * ${#SEEDS[@]} ))
 COUNT=0
+
+# =========================================================
+# SECTION 5: RUN ALL EXPERIMENTS
+# =========================================================
 
 for SCHED in "${SCHEDULERS[@]}"; do
     for PATRONS in "${PATRON_COUNTS[@]}"; do

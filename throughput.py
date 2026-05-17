@@ -2,6 +2,9 @@ import pandas as pd
 import glob
 import os
 
+# =========================================================
+# SECTION 1: FILE SETUP
+# =========================================================
 INPUT_DIR = "results"
 OUTPUT_FILE = "results/summary_throughput.csv"
 
@@ -9,6 +12,9 @@ results = []
 
 files = glob.glob(os.path.join(INPUT_DIR, "output_*.csv"))
 
+# =========================================================
+# SECTION 2: PROCESS EACH FILE (EACH ALGORITHM)
+# =========================================================
 for file in files:
     algo = os.path.basename(file).replace("output_", "").replace(".csv", "")
     
@@ -18,7 +24,9 @@ for file in files:
     
     with open(file, "r") as f:
         lines = f.readlines()
-    
+# =========================================================
+# SECTION 3: READ EACH LINE IN FILE
+# =========================================================    
     for line in lines:
         line = line.strip()
         
@@ -26,7 +34,7 @@ for file in files:
         if line.startswith("RunID") or line == "":
             continue
         
-        # Detect separator
+        #  When we hit SEPARATOR, it means a new simulation run
         if line.startswith("SEPARATOR"):
             # Process previous run if exists
             if current_rows and current_patrons is not None:
@@ -58,7 +66,9 @@ for file in files:
                 except:
                     continue
     
-    # Process last run
+    # =========================================================
+    # SECTION 4: PROCESS LAST RUN IN FILE
+    # =========================================================
     if current_rows and current_patrons is not None:
         df = pd.DataFrame(current_rows)
         patron_count = df["PatronID"].nunique()
@@ -68,7 +78,9 @@ for file in files:
         runtime = end_time - start_time
         throughput = num_orders / runtime if runtime > 0 else 0
         results.append([algo, current_patrons, current_seed, patron_count, num_orders, runtime, throughput])
-
+# =========================================================
+# SECTION 5: CREATE FINAL SUMMARY TABLE
+# =========================================================
 summary = pd.DataFrame(results, columns=[
     "Algorithm", "PatronCount", "Seed", "UniquePatrons",
     "OrdersCompleted", "Runtime(ms)", "Throughput"

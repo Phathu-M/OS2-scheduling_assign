@@ -10,13 +10,13 @@ import pandas as pd
 # =========================================================
 def load_data():
     """
-    Loads ONLY raw scheduling simulation outputs.
-    Excludes summary and throughput files.
+    Reads raw simulation output files.
+    Each file contains results for one scheduling run.
     """
 
     data = []
 
-    # Only read simulation outputs (NOT summary files)
+    # Get all CSV files from results folder
     files = glob.glob("results/output_*.csv")
 
     for file in files:
@@ -39,10 +39,13 @@ def load_data():
 
     return data
 
+# =========================================================
+# SECTION 2: MAP EACH ROW TO CORRECT RUN + PATRON COUNT
+# =========================================================
 def assign_run_ids(data):
     """
-    Reads SEPARATOR lines from CSV files to assign correct
-    patron count and run ID to each row.
+    Matches each row to the correct number of patrons per run.
+    This is needed because multiple simulations are in one file.
     """
     files = glob.glob("results/output_*.csv")
     patron_map = {}  # maps (file, arrival_time) to patron_count
@@ -76,7 +79,7 @@ def assign_run_ids(data):
     return data
 
 # =========================================================
-# SECTION 2: IDENTIFY SCHEDULING ALGORITHM
+# SECTION 3: IDENTIFY SCHEDULING ALGORITHM
 # =========================================================
 def get_algorithm(filename):
     filename = filename.upper()
@@ -92,9 +95,8 @@ def get_algorithm(filename):
     else:
         return "UNKNOWN"
 
-
 # =========================================================
-# SECTION 3: AGGREGATE METRICS (AVERAGE OVER RUNS/SEEDS)
+# SECTION 4: COMPUTE AVERAGES ACROSS RUNS AND SEEDS
 # =========================================================
 def aggregate(data):
     data = assign_run_ids(data)
@@ -144,9 +146,11 @@ def aggregate(data):
     return final
 
 # =========================================================
-# SECTION 4: PLOTTING FUNCTION (LINE GRAPHS)
+# SECTION 5: LINE GRAPH PLOTTING FUNCTION
 # =========================================================
 def plot_metric(averages, metric, title):
+    
+    # Draws line graph for a metric (waiting, turnaround, response).
     plt.figure(figsize=(12, 6))
 
     colors = {
@@ -171,8 +175,15 @@ def plot_metric(averages, metric, title):
     plt.tight_layout()
     plt.savefig(f"results/{metric}_vs_patrons.png", dpi=300)
     plt.close()
-    
+
+# =========================================================
+# SECTION 6: BOXPLOT FUNCTION (DISTRIBUTION VIEW)
+# =========================================================    
 def plot_boxplots(data, metric, title):
+    """
+    Shows distribution of values per algorithm.
+    Helps detect outliers and starvation.
+    """
     data = assign_run_ids(data)
     
     from collections import defaultdict
@@ -204,14 +215,13 @@ def plot_boxplots(data, metric, title):
     plt.close()
     
 # =========================================================
-# SECTION 5: LOAD PRECOMPUTED THROUGHPUT
+# SECTION 7: LOAD PRECOMPUTED THROUGHPUT
 # =========================================================
 def load_throughput():
     return pd.read_csv("results/summary_throughput.csv")
 
-
 # =========================================================
-# SECTION 6: PLOT THROUGHPUT
+# SECTION 8: PLOT THROUGHPUT
 # =========================================================
 def plot_throughput(throughput_df):
     plt.figure(figsize=(12, 6))
@@ -239,9 +249,13 @@ def plot_throughput(throughput_df):
     plt.savefig("results/throughput.png", dpi=300)
     plt.close()
 # =========================================================
-# SECTION 7: ADDITIONAL ANALYSIS - TOTAL WAITING TIME PER PATRON
+# SECTION 9: TOTAL WAITING TIME PER PATRON
 # =========================================================  
 def plot_patron_total_wait(data):
+    """
+    Shows total waiting time per patron.
+    Helps detect unfairness and starvation.
+    """
     data = assign_run_ids(data)
     
     colors = {
@@ -282,7 +296,7 @@ def plot_patron_total_wait(data):
     plt.close()
     
 # =========================================================
-# SECTION 8: MAIN EXECUTION PIPELINE
+# SECTION 10: MAIN PROGRAM
 # =========================================================
 def main():
     data = load_data()
@@ -301,6 +315,8 @@ def main():
     # Throughput
     throughput = load_throughput()
     plot_throughput(throughput)
+    # Total waiting time per patron
     plot_patron_total_wait(data)
+    
 if __name__ == "__main__":
     main()
