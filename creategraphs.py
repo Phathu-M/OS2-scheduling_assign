@@ -238,9 +238,51 @@ def plot_throughput(throughput_df):
     plt.xlim(left=0)
     plt.savefig("results/throughput.png", dpi=300)
     plt.close()
-
 # =========================================================
-# SECTION 7: MAIN EXECUTION PIPELINE
+# SECTION 7: ADDITIONAL ANALYSIS - TOTAL WAITING TIME PER PATRON
+# =========================================================  
+def plot_patron_total_wait(data):
+    data = assign_run_ids(data)
+    
+    colors = {
+        "FCFS": "#E91212",
+        "SJF": "#639922",
+        "Priority": "#EF9F27",
+        "MLFQ": "#5B2D8E"
+    }
+    
+    alg_order = ["FCFS", "SJF", "Priority", "MLFQ"]
+    patron_totals = defaultdict(list)
+    
+    for row in data:
+        alg = get_algorithm(row["file"])
+        patron_totals[(alg, row["patron"])].append(row["waiting"])
+    
+    grouped = defaultdict(list)
+    for (alg, patron), waits in patron_totals.items():
+        grouped[alg].append(sum(waits))
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    bp = ax.boxplot(
+        [grouped[a] for a in alg_order],
+        tick_labels=alg_order,
+        patch_artist=True,
+        medianprops=dict(color="black", linewidth=2)
+    )
+    for patch, color in zip(bp["boxes"], [colors[a] for a in alg_order]):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.7)
+    
+    ax.set_ylabel("Total Waiting Time per Patron (ms)")
+    ax.set_xlabel("Scheduling Algorithm")
+    ax.set_title("Total Waiting Time per Patron by Algorithm")
+    ax.grid(True, alpha=0.3, axis="y")
+    plt.tight_layout()
+    plt.savefig("results/patron_total_wait_boxplot.png", dpi=300)
+    plt.close()
+    
+# =========================================================
+# SECTION 8: MAIN EXECUTION PIPELINE
 # =========================================================
 def main():
     data = load_data()
@@ -259,6 +301,6 @@ def main():
     # Throughput
     throughput = load_throughput()
     plot_throughput(throughput)
-    
+    plot_patron_total_wait(data)
 if __name__ == "__main__":
     main()
