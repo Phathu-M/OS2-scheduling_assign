@@ -1,0 +1,60 @@
+commit 8d119183b6d2fcb09eaa70d9f586c9525b32b2b9 (HEAD -> main, origin/main, origin/HEAD)
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Mon May 18 00:55:53 2026 +0200
+
+    add comments to code
+
+commit 88a09a9da777fcf3b7b0a3f5715bf4e5adf4b268
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Sun May 17 21:33:39 2026 +0200
+
+    Add total waiting time per patron per algorithm graph, add plot_patron_total_wait method in creategraphs.py,keep all three metrics graphs
+
+commit 47903a2abd90980c894b4aa2e99fe8ad0b761f38
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Sat May 16 15:40:28 2026 +0200
+
+    Final graphs generated - all metrics across all algorithms
+
+commit 53217b8633b277e5279dd24e3e84f147d2b2aa8d
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Sat May 16 14:52:44 2026 +0200
+
+    Fix run separation using SEPARATOR lines, update creategraphs.py and throughput.py to correctly group runs by patron count and seed
+
+commit 97e39cd145c376b27d53a991586ba5605e463701
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Sat May 16 10:28:54 2026 +0200
+
+    Add data collection, analysis scripts and results: fix RunID bug, add throughput calculation, add boxplot and line graphs for all scheduling metrics
+
+commit c182218b08352b2824d9eda9ed29ca114ec86388
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Fri May 15 23:20:59 2026 +0200
+
+    Add creategraphs.py for generating and exporting performance analysis graphs (waiting, turnaround, response, throughput)
+
+commit 94636762c0e4c957886601715c7415b1e1efbf9f
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Fri May 15 20:50:29 2026 +0200
+
+    Add experiment automation, throughput analysis, and results pipeline
+
+commit f938c8eb0c1e5d3f7703861608b2b030c679b704
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Thu May 14 19:19:32 2026 +0200
+
+    Added run id and fixed file handling so that output writer checks file exists before writing header and ensures safe logging
+
+commit 1eb87721fd5e58db313cb72b92cd97f917b9b90d
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Thu May 14 18:40:52 2026 +0200
+
+    Record waiting, turnaround, and response times per order
+
+commit 7a66d2bfcc63a98666c13d6e203dc2b6c65c265b
+Author: Phathu M <mudauthepha@gmail.com>
+Date:   Thu May 14 11:05:48 2026 +0200
+
+    Initial assignment setup
+(END)
